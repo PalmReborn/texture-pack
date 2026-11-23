@@ -149,8 +149,8 @@
   .feature p { margin: 0; color: var(--muted); font-size: 15.5px; line-height: 1.5; }
   .quad { display: grid; grid-template-columns: repeat(2, 48px); gap: 2px; }
   .quad img { width: 48px; height: 48px; }
-  .hook { width: 96px; height: 96px; background: url(img/hook.png) 0 0 / 96px auto no-repeat; animation: hook 1.2s steps(12) infinite; }
-  @keyframes hook { to { background-position: 0 -1152px; } }
+  .hook { --s: 96px; width: var(--s); height: var(--s); background: url(img/hook.png) 0 0 / var(--s) auto no-repeat; animation: hook 1.2s steps(12) infinite; }
+  @keyframes hook { to { background-position: 0 calc(var(--s) * -12); } }
 
   /* ---------- sections ---------- */
   section { padding: 84px 0 0; }
@@ -182,6 +182,15 @@
   }
   .spin svg { width: 17px; height: 17px; }
   .stage.used .spin { opacity: 0; }
+  .hold {
+    position: absolute; right: 12px; bottom: 12px; z-index: 2; width: 54px; height: 54px; padding: 0; display: grid; place-items: center;
+    border-radius: 16px; border: 2px solid rgba(255, 255, 255, .24); background: rgba(0, 0, 0, .46); cursor: pointer;
+    transition: transform .15s, border-color .2s, background .2s, box-shadow .2s;
+  }
+  .hold[hidden], .stage.no3d .hold { display: none; }
+  .hold:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .6); }
+  .hold[aria-pressed="true"] { border-color: var(--gold); background: rgba(255, 195, 31, .22); box-shadow: 0 0 0 4px rgba(255, 195, 31, .18); }
+  .hold .hook { --s: 32px; }
   .info .count { color: var(--aqua); font-weight: 800; font-size: 13px; letter-spacing: 2.6px; text-transform: uppercase; }
   .info .name {
     font-family: var(--display); font-weight: 400; font-size: clamp(42px, 6.4vw, 76px); line-height: 1; margin: 8px 0 6px;
@@ -287,7 +296,10 @@
     .nav a.link { display: none; }
     .art .bit { display: none; }
   }
-  @media (max-width: 440px) { .slot, .slot i { width: 72px; } .slot i { height: 72px; } .slots { gap: 8px; } .feature .ic { width: 96px; height: 96px; } summary { font-size: 17px; } }
+  @media (max-width: 440px) {
+    .slot, .slot i { width: 72px; } .slot i { height: 72px; } .slots { gap: 8px; } .feature .ic { width: 96px; height: 96px; } summary { font-size: 17px; }
+    .spin { left: 10px; transform: none; } .spin .more { display: none; } .hold { right: 10px; bottom: 10px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     html { scroll-behavior: auto; }
@@ -363,7 +375,8 @@
         <div class="stage" id="stage">
           <canvas id="v-3d" tabindex="0" aria-label="Player wearing the armor set. Drag, or use the arrow keys, to turn it."></canvas>
           <img class="flat px" id="v-fig" src="img/sets/akuma.png" alt="Akuma armor set" width="192" height="384">
-          <span class="spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>Drag to spin the player</span>
+          <span class="spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg><span>Drag to spin<span class="more"> the player</span></span></span>
+          <button class="hold" id="v-hook" type="button" hidden aria-pressed="false" aria-label="Hold the Diamond Hook" title="Hold the Diamond Hook"><span class="hook px" aria-hidden="true"></span></button>
         </div>
         <div class="info">
           <div class="count" id="v-count">Armor set 1 of 27</div>
@@ -498,10 +511,12 @@
   }, { passive: true });
 
   /* ---------- 3D player that can be turned by dragging ---------- */
-  function makePlayer(canvas, onUse) {
+  function makePlayer(canvas, onUse, onHook) {
     var gl = null;
     try {
-      var opts = { alpha: true, antialias: true, premultipliedAlpha: false };
+      /* No edge smoothing by the graphics card: on faces seen almost edge-on it guesses colors and leaves stray dots.
+         The picture is drawn at double size instead and the browser shrinks it, which smooths every edge. */
+      var opts = { alpha: true, antialias: false, premultipliedAlpha: false };
       gl = canvas.getContext("webgl", opts) || canvas.getContext("experimental-webgl", opts);
     } catch (err) { gl = null; }
     if (!gl) { return null; }
@@ -512,71 +527,151 @@
       gl.compileShader(s);
       return s;
     }
+    /* b = the piece of the picture a face may use, so a face can never pick up pixels from the face next to it. */
     var program = gl.createProgram();
     gl.attachShader(program, compile(gl.VERTEX_SHADER,
-      "attribute vec3 p;attribute vec2 t;attribute vec3 n;uniform mat4 m;uniform mat3 r;varying vec2 uv;varying float li;" +
-      "void main(){vec3 k=normalize(r*n);li=0.6+0.4*max(dot(k,normalize(vec3(0.35,0.55,0.76))),0.0);uv=t;gl_Position=m*vec4(p,1.0);}"));
+      "attribute vec3 p;attribute vec2 t;attribute vec3 n;attribute vec4 b;uniform mat4 m;uniform mat3 r;" +
+      "varying vec2 uv;varying vec4 lim;varying float li;" +
+      "void main(){vec3 k=normalize(r*n);li=0.6+0.4*max(dot(k,normalize(vec3(0.35,0.55,0.76))),0.0);uv=t;lim=b;gl_Position=m*vec4(p,1.0);}"));
     gl.attachShader(program, compile(gl.FRAGMENT_SHADER,
-      "precision mediump float;uniform sampler2D s;varying vec2 uv;varying float li;" +
-      "void main(){vec4 c=texture2D(s,uv);if(c.a<0.5)discard;gl_FragColor=vec4(c.rgb*li,1.0);}"));
+      "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n" +
+      "uniform sampler2D s;varying vec2 uv;varying vec4 lim;varying float li;" +
+      "void main(){vec4 c=texture2D(s,clamp(uv,lim.xy,lim.zw));if(c.a<0.5)discard;gl_FragColor=vec4(c.rgb*li,1.0);}"));
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { return null; }
     gl.useProgram(program);
     var aP = gl.getAttribLocation(program, "p");
     var aT = gl.getAttribLocation(program, "t");
     var aN = gl.getAttribLocation(program, "n");
+    var aB = gl.getAttribLocation(program, "b");
     var uM = gl.getUniformLocation(program, "m");
     var uR = gl.getUniformLocation(program, "r");
     gl.enableVertexAttribArray(aP);
     gl.enableVertexAttribArray(aT);
     gl.enableVertexAttribArray(aN);
+    gl.enableVertexAttribArray(aB);
     gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
+    gl.depthFunc(gl.LEQUAL);            /* of two faces in exactly the same place, the one drawn later wins */
+    gl.polygonOffset(0.25, 2);          /* how far "inner" faces are set back, see shell() */
     gl.clearColor(0, 0, 0, 0);
 
-    /* One body part: a box cut from the standard 64x32 skin layout. grow = how far armor sits off the body. */
-    function box(out, u, v, w, h, d, x0, y0, z0, grow, mirror) {
-      var x1 = x0 - grow, y1 = y0 - grow, z1 = z0 - grow;
-      var x2 = x0 + w + grow, y2 = y0 + h + grow, z2 = z0 + d + grow;
-      var e = 0.03;
-      var faces = [
-        [[x1, y2, z2], [x2, y2, z2], [x2, y1, z2], [x1, y1, z2], u + d, v + d, w, h, [0, 0, 1]],
-        [[x2, y2, z1], [x1, y2, z1], [x1, y1, z1], [x2, y1, z1], u + d + w + d, v + d, w, h, [0, 0, -1]],
-        [[x1, y2, z1], [x1, y2, z2], [x1, y1, z2], [x1, y1, z1], u, v + d, d, h, [-1, 0, 0]],
-        [[x2, y2, z2], [x2, y2, z1], [x2, y1, z1], [x2, y1, z2], u + d + w, v + d, d, h, [1, 0, 0]],
-        [[x1, y2, z1], [x2, y2, z1], [x2, y2, z2], [x1, y2, z2], u + d, v, w, d, [0, 1, 0]],
-        [[x1, y1, z2], [x2, y1, z2], [x2, y1, z1], [x1, y1, z1], u + d + w, v, w, d, [0, -1, 0]]
-      ];
-      var corner = [[0, 0], [1, 0], [1, 1], [0, 1]];
-      var order = [0, 1, 2, 0, 2, 3];
-      faces.forEach(function (f) {
-        var su = f[4] + e, sv = f[5] + e, eu = f[4] + f[6] - e, ev = f[5] + f[7] - e, nor = f[8];
-        order.forEach(function (k) {
-          var pos = f[k];
-          out.push(mirror ? -pos[0] : pos[0], pos[1], pos[2],
-            (corner[k][0] ? eu : su) / 64, (corner[k][1] ? ev : sv) / 32,
-            mirror ? -nor[0] : nor[0], nor[1], nor[2]);
-        });
+    var CORNER = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    var ORDER = [0, 1, 2, 0, 2, 3];
+    /* One corner of a face: where it is, its spot in the picture, which way it faces, the piece of the picture it may use. */
+    function put(out, pos, u, v, nor, lim) {
+      out.push(pos[0], pos[1], pos[2], u, v, nor[0], nor[1], nor[2], lim[0], lim[1], lim[2], lim[3]);
+    }
+
+    /* ----- body parts: boxes cut from the standard 64x32 skin layout (armor pictures use the same layout) ----- */
+    var HEAD = { u: 0, v: 0, w: 8, h: 8, d: 8, x: -4, y: 24, z: -4 };
+    var BODY = { u: 16, v: 16, w: 8, h: 12, d: 4, x: -4, y: 12, z: -2 };
+    var ARM_R = { u: 40, v: 16, w: 4, h: 12, d: 4, x: -8, y: 12, z: -2 };
+    var ARM_L = { u: 40, v: 16, w: 4, h: 12, d: 4, x: -8, y: 12, z: -2, mirror: true };
+    var LEG_R = { u: 0, v: 16, w: 4, h: 12, d: 4, x: -4, y: 0, z: -2 };
+    var LEG_L = { u: 0, v: 16, w: 4, h: 12, d: 4, x: -4, y: 0, z: -2, mirror: true };
+    var ALL = [HEAD, BODY, ARM_R, ARM_L, LEG_R, LEG_L];      /* in the order the game draws them */
+
+    function extent(q, grow) {          /* the two far corners of a part, grown and mirrored */
+      var lo = [q.x - grow, q.y - grow, q.z - grow], hi = [q.x + q.w + grow, q.y + q.h + grow, q.z + q.d + grow];
+      if (q.mirror) { var t = lo[0]; lo[0] = -hi[0]; hi[0] = -t; }
+      return { lo: lo, hi: hi };
+    }
+    function facesOf(q, grow) {         /* the six faces of a part and the piece of the picture each one shows */
+      var f = q.mirror ? -1 : 1, u = q.u, v = q.v, w = q.w, h = q.h, d = q.d;
+      var x1 = q.x - grow, y1 = q.y - grow, z1 = q.z - grow, x2 = q.x + w + grow, y2 = q.y + h + grow, z2 = q.z + d + grow;
+      /* corner where the picture starts, the corner to its right, the corner below it, picture x, y, width, height, facing */
+      return [
+        [[x1, y2, z2], [x2, y2, z2], [x1, y1, z2], u + d, v + d, w, h, 2, 1],
+        [[x2, y2, z1], [x1, y2, z1], [x2, y1, z1], u + d + w + d, v + d, w, h, 2, -1],
+        [[x1, y2, z1], [x1, y2, z2], [x1, y1, z1], u, v + d, d, h, 0, -1],
+        [[x2, y2, z2], [x2, y2, z1], [x2, y1, z2], u + d + w, v + d, d, h, 0, 1],
+        [[x1, y2, z1], [x2, y2, z1], [x1, y2, z2], u + d, v, w, d, 1, 1],
+        [[x1, y1, z2], [x2, y1, z2], [x1, y1, z1], u + d + w, v, w, d, 1, -1]
+      ].map(function (k) {
+        return { a: [k[0][0] * f, k[0][1], k[0][2]], b: [k[1][0] * f, k[1][1], k[1][2]], c: [k[2][0] * f, k[2][1], k[2][2]],
+          u: k[3], v: k[4], w: k[5], h: k[6], axis: k[7], facing: k[7] === 0 ? k[8] * f : k[8] };
       });
     }
-    function mesh(parts, grow) {
-      var out = [];
-      parts.forEach(function (q) { box(out, q[0], q[1], q[2], q[3], q[4], q[5], q[6], q[7], grow, q[8]); });
+    /* Builds one layer of the player (the skin, the leggings, or the outer armor). grow = how far it sits off the body.
+       Armor boxes are bigger than the body, so where two parts meet they overlap and their faces lie in the same place.
+       Drawn carelessly that flickers in stripes. So every face is cut along the edges of the other boxes: faces that
+       share a place are then made of the very same triangles, and the part drawn later simply wins, as in the game.
+       Pieces of a face that end up inside another box go to "inner". They only show through gaps in that box, and they
+       are drawn slightly set back so their edges can never shine through it.
+       Answers one { inner, outer } pair of corner lists per part. */
+    function shell(parts, grow) {
+      var ext = parts.map(function (q) { return extent(q, grow); });
+      var AXES = [[1, 2], [0, 2], [0, 1]];
+      return parts.map(function (q, me) {
+        var inner = [], outer = [];
+        facesOf(q, grow).forEach(function (f) {
+          var i = AXES[f.axis][0], j = AXES[f.axis][1];
+          function cuts(k) {              /* where this face has to be cut along one direction */
+            var lo = ext[me].lo[k], hi = ext[me].hi[k], list = [lo, hi];
+            ext.forEach(function (o, other) {
+              if (other === me) { return; }
+              [o.lo[k], o.hi[k]].forEach(function (x) { if (x > lo && x < hi && list.indexOf(x) < 0) { list.push(x); } });
+            });
+            return list.sort(function (m, n) { return m - n; });
+          }
+          function corner(pi, pj) {       /* a point of the face and its spot in the picture */
+            var p = [0, 0, 0], s = 0, t = 0, ss = 0, tt = 0;
+            p[f.axis] = f.a[f.axis];
+            p[i] = pi;
+            p[j] = pj;
+            for (var k = 0; k < 3; k++) {
+              s += (p[k] - f.a[k]) * (f.b[k] - f.a[k]);
+              ss += (f.b[k] - f.a[k]) * (f.b[k] - f.a[k]);
+              t += (p[k] - f.a[k]) * (f.c[k] - f.a[k]);
+              tt += (f.c[k] - f.a[k]) * (f.c[k] - f.a[k]);
+            }
+            return { p: p, u: (f.u + f.w * s / ss) / 64, v: (f.v + f.h * t / tt) / 32 };
+          }
+          var ci = cuts(i), cj = cuts(j), nor = [0, 0, 0];
+          nor[f.axis] = f.facing;
+          var lim = [(f.u + 0.05) / 64, (f.v + 0.05) / 32, (f.u + f.w - 0.05) / 64, (f.v + f.h - 0.05) / 32];
+          for (var m = 0; m + 1 < ci.length; m++) {
+            for (var n = 0; n + 1 < cj.length; n++) {
+              var mid = [0, 0, 0];
+              mid[f.axis] = f.a[f.axis];
+              mid[i] = (ci[m] + ci[m + 1]) / 2;
+              mid[j] = (cj[n] + cj[n + 1]) / 2;
+              var inside = ext.some(function (o, other) {
+                return other !== me && mid[0] > o.lo[0] && mid[0] < o.hi[0] && mid[1] > o.lo[1] && mid[1] < o.hi[1] &&
+                  mid[2] > o.lo[2] && mid[2] < o.hi[2];
+              });
+              /* always the same four corners in the same order, whichever part the piece belongs to */
+              var quad = [corner(ci[m], cj[n]), corner(ci[m + 1], cj[n]), corner(ci[m + 1], cj[n + 1]), corner(ci[m], cj[n + 1])];
+              for (var k = 0; k < 6; k++) { put(inside ? inner : outer, quad[ORDER[k]].p, quad[ORDER[k]].u, quad[ORDER[k]].v, nor, lim); }
+            }
+          }
+        });
+        return { inner: inner, outer: outer };
+      });
+    }
+    function upload(inner, outer) {     /* inner corners first, so they can be drawn on their own */
       var buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(out), gl.STATIC_DRAW);
-      return { buffer: buffer, count: out.length / 8 };
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(inner.concat(outer)), gl.STATIC_DRAW);
+      return { buffer: buffer, inner: inner.length / 12, count: (inner.length + outer.length) / 12 };
     }
-    var HEAD = [0, 0, 8, 8, 8, -4, 24, -4, false];
-    var BODY = [16, 16, 8, 12, 4, -4, 12, -2, false];
-    var ARM_R = [40, 16, 4, 12, 4, -8, 12, -2, false];
-    var ARM_L = [40, 16, 4, 12, 4, -8, 12, -2, true];
-    var LEG_R = [0, 16, 4, 12, 4, -4, 0, -2, false];
-    var LEG_L = [0, 16, 4, 12, 4, -4, 0, -2, true];
-    var skinMesh = mesh([HEAD, BODY, ARM_R, ARM_L, LEG_R, LEG_L], 0);
-    var legsMesh = mesh([BODY, LEG_R, LEG_L], 0.5);                      /* leggings sit closest to the body */
-    var outerMesh = mesh([HEAD, BODY, ARM_R, ARM_L, LEG_R, LEG_L], 1);   /* helmet, chestplate and boots */
+    function mesh(lists) {
+      var inner = [], outer = [];
+      lists.forEach(function (l) { inner = inner.concat(l.inner); outer = outer.concat(l.outer); });
+      return upload(inner, outer);
+    }
+    /* A layer as three meshes: the parts drawn before the right arm, the right arm (it moves when it holds something),
+       and the parts drawn after it. */
+    function layer(parts, grow) {
+      var lists = shell(parts, grow), at = parts.indexOf(ARM_R);
+      if (at < 0) { return [mesh(lists)]; }
+      return [mesh(lists.slice(0, at)), mesh([lists[at]]), mesh(lists.slice(at + 1))];
+    }
+    var skin = layer(ALL, 0);
+    var legs = layer([BODY, LEG_R, LEG_L], 0.5);      /* leggings sit closest to the body */
+    var outer = layer(ALL, 1);                        /* helmet, chestplate and boots */
 
+    var stale = true;                   /* something changed since the picture was last drawn */
     function texture() {
       var t = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, t);
@@ -592,6 +687,7 @@
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+      stale = true;
     }
     var skinTex = texture(), legsTex = texture(), outerTex = texture();
     var skinImage = new Image();
@@ -612,8 +708,67 @@
       return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]);
     }
     function move(x, y, z) { return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]); }
+    function size(k) { return new Float32Array([k, 0, 0, 0, 0, k, 0, 0, 0, 0, k, 0, 0, 0, 0, 1]); }
     function turnY(a) { var c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); }
     function turnX(a) { var c = Math.cos(a), s = Math.sin(a); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); }
+
+    /* ----- the Diamond Hook in the right hand -----
+       Placed with the game's own numbers (1.8): an arm that holds something lifts a tenth of a half turn, and a held tool
+       is 0.85 of a block big, tilted 35 degrees, sitting a little in front of the fist. HELD is measured from the shoulder. */
+    var ARM_UP = Math.PI / 10;
+    var TILT = 35 * Math.PI / 180;
+    var HELD = mul(move(-1, -9.5, 6), mul(size(0.85), mul(
+      new Float32Array([0, Math.sin(TILT), Math.cos(TILT), 0, 0, -Math.cos(TILT), Math.sin(TILT), 0, 1, 0, 0, 0, 0, 0, 0, 1]),
+      move(-8, -8, -8))));
+    var HOOK_MS = 100;       /* how long the game shows each color of the hook */
+    var hook = null, holding = false, lift = 0, shown = 0;
+
+    /* A flat item the way the game builds it: the picture, one pixel thick, with a rim wherever the picture ends. */
+    function itemMesh(px, n) {
+      var out = [], k = 16 / n, e = 0.05 / n, all = [e, e, 1 - e, 1 - e];
+      function solid(x, y) { return x >= 0 && y >= 0 && x < n && y < n && px[(y * n + x) * 4 + 3] > 127; }
+      function quad(pts, uvs, nor, lim) {
+        ORDER.forEach(function (i) { put(out, pts[i], uvs[i][0], uvs[i][1], nor, lim); });
+      }
+      quad([[0, 16, 8.5], [16, 16, 8.5], [16, 0, 8.5], [0, 0, 8.5]], CORNER, [0, 0, 1], all);
+      quad([[0, 16, 7.5], [16, 16, 7.5], [16, 0, 7.5], [0, 0, 7.5]], CORNER, [0, 0, -1], all);
+      for (var y = 0; y < n; y++) {
+        for (var x = 0; x < n; x++) {
+          if (!solid(x, y)) { continue; }
+          var l = x * k, r = l + k, t = 16 - y * k, b = t - k;
+          var c = [(x + 0.5) / n, (y + 0.5) / n], uvs = [c, c, c, c], lim = [c[0], c[1], c[0], c[1]];
+          if (!solid(x - 1, y)) { quad([[l, t, 7.5], [l, t, 8.5], [l, b, 8.5], [l, b, 7.5]], uvs, [-1, 0, 0], lim); }
+          if (!solid(x + 1, y)) { quad([[r, t, 8.5], [r, t, 7.5], [r, b, 7.5], [r, b, 8.5]], uvs, [1, 0, 0], lim); }
+          if (!solid(x, y - 1)) { quad([[l, t, 7.5], [r, t, 7.5], [r, t, 8.5], [l, t, 8.5]], uvs, [0, 1, 0], lim); }
+          if (!solid(x, y + 1)) { quad([[l, b, 8.5], [r, b, 8.5], [r, b, 7.5], [l, b, 7.5]], uvs, [0, -1, 0], lim); }
+        }
+      }
+      return upload([], out);
+    }
+    /* The hook's picture is a strip of frames, one per color. Each frame becomes its own small texture. */
+    var stripImage = new Image();
+    stripImage.onload = function () {
+      try {
+        var n = stripImage.width, total = Math.max(1, Math.floor(stripImage.height / n));
+        var pad = document.createElement("canvas");
+        pad.width = n;
+        pad.height = n;
+        var ctx = pad.getContext("2d", { willReadFrequently: true });
+        var frames = [], shapes = {};
+        for (var f = 0; f < total; f++) {
+          ctx.clearRect(0, 0, n, n);
+          ctx.drawImage(stripImage, 0, f * n, n, n, 0, 0, n, n);
+          var px = ctx.getImageData(0, 0, n, n).data, shape = "";
+          for (var i = 3; i < px.length; i += 4) { shape += px[i] > 127 ? "1" : "0"; }
+          var tex = texture();
+          fill(tex, pad);
+          frames.push({ tex: tex, mesh: shapes[shape] || (shapes[shape] = itemMesh(px, n)) });
+        }
+        hook = frames;
+        if (onHook) { onHook(); }
+      } catch (err) { hook = null; }      /* the browser would not let the page read the picture: no hook button then */
+    };
+    stripImage.src = "img/hook-item.png";
 
     var view = { yaw: -0.55, pitch: 0.14, spin: !calm };
     if (query.has("yaw")) { view.yaw = parseFloat(query.get("yaw")) * Math.PI / 180; view.spin = false; }
@@ -621,31 +776,57 @@
 
     function drawMesh(m, t) {
       gl.bindBuffer(gl.ARRAY_BUFFER, m.buffer);
-      gl.vertexAttribPointer(aP, 3, gl.FLOAT, false, 32, 0);
-      gl.vertexAttribPointer(aT, 2, gl.FLOAT, false, 32, 12);
-      gl.vertexAttribPointer(aN, 3, gl.FLOAT, false, 32, 20);
+      gl.vertexAttribPointer(aP, 3, gl.FLOAT, false, 48, 0);
+      gl.vertexAttribPointer(aT, 2, gl.FLOAT, false, 48, 12);
+      gl.vertexAttribPointer(aN, 3, gl.FLOAT, false, 48, 20);
+      gl.vertexAttribPointer(aB, 4, gl.FLOAT, false, 48, 32);
       gl.bindTexture(gl.TEXTURE_2D, t);
-      gl.drawArrays(gl.TRIANGLES, 0, m.count);
+      if (m.inner) {
+        gl.enable(gl.POLYGON_OFFSET_FILL);
+        gl.drawArrays(gl.TRIANGLES, 0, m.inner);
+        gl.disable(gl.POLYGON_OFFSET_FILL);
+      }
+      gl.drawArrays(gl.TRIANGLES, m.inner, m.count - m.inner);
     }
     function render() {
       var w = canvas.clientWidth, h = canvas.clientHeight;
       if (!w || !h) { return; }
-      var ratio = Math.min(window.devicePixelRatio || 1, 2);
-      var pw = Math.round(w * ratio), ph = Math.round(h * ratio);
-      if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
+      /* twice the screen's own pixels (see the top), but never a huge picture on a big sharp screen */
+      var scale = Math.min(Math.min(window.devicePixelRatio || 1, 2) * 2, Math.sqrt(2600000 / (w * h)));
+      var pw = Math.round(w * scale), ph = Math.round(h * scale);
+      if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; stale = true; }
+      if (!stale) { return; }
+      stale = false;
       gl.viewport(0, 0, pw, ph);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       var rot = mul(turnX(view.pitch), turnY(view.yaw));
-      var mvp = mul(persp(0.5, w / h, 1, 400), mul(move(0, 0, -84), mul(rot, move(0, -16.5, 0))));
-      gl.uniformMatrix4fv(uM, false, mvp);
-      gl.uniformMatrix3fv(uR, false, new Float32Array([rot[0], rot[1], rot[2], rot[4], rot[5], rot[6], rot[8], rot[9], rot[10]]));
-      drawMesh(skinMesh, skinTex);
-      drawMesh(legsMesh, legsTex);
-      drawMesh(outerMesh, outerTex);
+      /* The player is under 19 units from its middle, so the depth range hugs it: a tight range sorts close faces better. */
+      var eye = mul(persp(0.5, w / h, 54, 114), mul(move(0, 0, -84), mul(rot, move(0, -16.5, 0))));
+      function place(part) {                 /* part = where a piece sits on the player; nothing = where it was built */
+        var turn = part ? mul(rot, part) : rot;
+        gl.uniformMatrix4fv(uM, false, part ? mul(eye, part) : eye);
+        gl.uniformMatrix3fv(uR, false, new Float32Array([turn[0], turn[1], turn[2], turn[4], turn[5], turn[6], turn[8], turn[9], turn[10]]));
+      }
+      var shoulder = mul(move(-5, 22, 0), turnX(-ARM_UP * lift));
+      var arm = lift ? mul(shoulder, move(5, -22, 0)) : null;      /* an arm at rest is drawn exactly like the rest */
+      [[skin, skinTex], [legs, legsTex], [outer, outerTex]].forEach(function (l) {
+        place(null);
+        drawMesh(l[0][0], l[1]);
+        if (l[0].length > 1) {
+          place(arm);
+          drawMesh(l[0][1], l[1]);
+          place(null);
+          drawMesh(l[0][2], l[1]);
+        }
+      });
+      if (holding && hook) {
+        place(mul(shoulder, HELD));
+        drawMesh(hook[shown].mesh, hook[shown].tex);
+      }
     }
 
     var grab = null;
-    function used() { view.spin = false; if (onUse) { onUse(); } }
+    function used() { view.spin = false; stale = true; if (onUse) { onUse(); } }
     canvas.addEventListener("pointerdown", function (e) {
       grab = { x: e.clientX, y: e.clientY };
       try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* older browsers */ }
@@ -657,6 +838,7 @@
       view.pitch = Math.max(-1.25, Math.min(1.25, view.pitch + (e.clientY - grab.y) * 0.011));
       grab.x = e.clientX;
       grab.y = e.clientY;
+      stale = true;
     });
     function release() { grab = null; }
     canvas.addEventListener("pointerup", release);
@@ -671,18 +853,27 @@
       e.preventDefault();
       used();
     });
+    window.addEventListener("resize", function () { stale = true; });
+    document.addEventListener("visibilitychange", function () { stale = true; });
 
     var onScreen = true;
     if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (entries) { onScreen = entries[0].isIntersecting; }).observe(canvas);
+      new IntersectionObserver(function (entries) { onScreen = entries[0].isIntersecting; stale = true; }).observe(canvas);
     }
     var before = 0;
     function frame(now) {
       var dt = Math.min(0.05, (now - before) / 1000 || 0);
       before = now;
       if (onScreen && !document.hidden) {
-        if (view.spin && !grab) { view.yaw += dt * 0.55; }
-        render();
+        if (view.spin && !grab) { view.yaw += dt * 0.55; stale = true; }
+        var goal = holding ? 1 : 0;           /* the arm swings up to hold the hook and back down without it */
+        if (lift !== goal) {
+          lift = calm ? goal : Math.max(0, Math.min(1, lift + (goal > lift ? dt : -dt) / 0.16));
+          stale = true;
+        }
+        var color = holding && hook && !calm ? Math.floor(now / HOOK_MS) % hook.length : 0;
+        if (color !== shown) { shown = color; stale = true; }
+        render();                             /* draws only when something changed */
       }
       window.requestAnimationFrame(frame);
     }
@@ -692,13 +883,15 @@
     return {
       wear: function (id) {
         wanted = id;
-        var outer = new Image(), legs = new Image(), left = 2;
-        function ready() { if (--left === 0 && wanted === id) { fill(outerTex, outer); fill(legsTex, legs); } }
-        outer.onload = ready;
-        legs.onload = ready;
-        outer.src = "img/armor/" + id + "-1.png";
-        legs.src = "img/armor/" + id + "-2.png";
-      }
+        var outerImage = new Image(), legsImage = new Image(), left = 2;
+        function ready() { if (--left === 0 && wanted === id) { fill(outerTex, outerImage); fill(legsTex, legsImage); } }
+        outerImage.onload = ready;
+        legsImage.onload = ready;
+        outerImage.src = "img/armor/" + id + "-1.png";
+        legsImage.src = "img/armor/" + id + "-2.png";
+      },
+      /* Put the hook in the player's hand, or take it away. Answers whether the player holds it now. */
+      hold: function (on) { holding = !!on && !!hook; stale = true; return holding; }
     };
   }
 
@@ -719,7 +912,11 @@
   var timer = null;
 
   function stopTour() { if (timer) { window.clearInterval(timer); timer = null; } }
-  var player = makePlayer(document.getElementById("v-3d"), function () { stage.classList.add("used"); stopTour(); });
+  var hookButton = document.getElementById("v-hook");
+  function holdHook(on) { hookButton.setAttribute("aria-pressed", player.hold(on) ? "true" : "false"); }
+  var player = makePlayer(document.getElementById("v-3d"),
+    function () { stage.classList.add("used"); stopTour(); },
+    function () { hookButton.hidden = false; if (query.get("hook") === "1") { holdHook(true); } });
   if (!player) { stage.classList.add("no3d"); }
 
   function visible() { return thumbs.filter(function (t) { return !t.hidden; }); }
@@ -754,6 +951,7 @@
   thumbs.forEach(function (t) { t.addEventListener("click", function () { show(t, true); }); });
   document.getElementById("v-prev").addEventListener("click", function () { step(-1, true); });
   document.getElementById("v-next").addEventListener("click", function () { step(1, true); });
+  hookButton.addEventListener("click", function () { stopTour(); holdHook(hookButton.getAttribute("aria-pressed") !== "true"); });
 
   box.addEventListener("input", function () {
     var want = box.value.trim().toLowerCase();
