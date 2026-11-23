@@ -7,52 +7,79 @@
 <meta name="description" content="Download the Cobra Kitmap texture pack.">
 <link rel="icon" type="image/png" href="logo.png">
 <style>
-  html, body { height: 100%; margin: 0; }
-  body {
-    background: #0a0d0a radial-gradient(ellipse at 50% 35%, #12301a 0%, #0a0d0a 62%);
-    color: #e8f5e8;
-    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    display: flex; align-items: center; justify-content: center; text-align: center;
+  :root {
+    --bg: #090c09; --panel: #101610; --line: #1f3a1f;
+    --text: #e8f5e8; --muted: #9db59d; --green: #7dff3c;
   }
-  main { padding: 24px; max-width: 460px; }
-  img { width: 150px; height: auto; filter: drop-shadow(0 0 22px rgba(120, 255, 60, .35)); }
-  h1 { margin: 18px 0 6px; font-size: 30px; letter-spacing: .5px; }
-  h1 span { color: #7dff3c; }
-  p { margin: 8px 0; color: #a9c2a9; font-size: 16px; line-height: 1.5; }
-  a { color: #7dff3c; }
-  .big { color: #e8f5e8; font-size: 18px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg) radial-gradient(ellipse at 50% 0%, #143a1c 0%, var(--bg) 58%) no-repeat;
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 16px 56px; }
+  header { text-align: center; }
+  header img { width: 170px; height: auto; filter: drop-shadow(0 0 26px rgba(120, 255, 60, .35)); }
+  h1 { font-size: clamp(32px, 6vw, 52px); margin: 14px 0 4px; letter-spacing: .5px; }
+  h1 span { color: var(--green); }
+  .tag { color: var(--muted); font-size: 18px; margin: 0 0 26px; }
+  .btn {
+    display: inline-block;
+    background: linear-gradient(180deg, #8dff4f, #3fc41a);
+    color: #061006; font-weight: 800; font-size: 20px; text-decoration: none;
+    padding: 16px 44px; border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(110, 255, 60, .28), inset 0 -3px 0 rgba(0, 0, 0, .18);
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .meta { color: var(--muted); font-size: 14px; margin-top: 12px; }
+  h2 { font-size: 22px; margin: 46px 0 14px; text-align: center; }
+  .sets {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+    padding: 14px; overflow-x: auto; text-align: center;
+  }
+  .sets img { max-width: 100%; height: auto; image-rendering: pixelated; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+  .step b {
+    display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;
+    background: var(--green); color: #061006; border-radius: 50%; margin-bottom: 10px;
+  }
+  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; color: var(--muted); font-size: 15px; }
+  .note {
+    margin-top: 18px; background: #0f1a0f; border: 1px solid var(--line);
+    border-left: 4px solid var(--green); border-radius: 10px;
+    padding: 14px 16px; color: var(--muted); font-size: 15px;
+  }
+  .note strong { color: var(--text); }
+  footer { text-align: center; color: #5f755f; font-size: 13px; margin-top: 40px; }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
-<main>
-  <img src="logo.png" alt="CobraMC logo">
-  <h1><span>Cobra</span> Kitmap</h1>
-  <p class="big" id="status">Starting your download...</p>
-  <p id="hint">This tab closes by itself in a moment.</p>
-  <p><a id="file" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip">Download did not start? Click here.</a></p>
-  <noscript><p>Scripts are turned off. Use the link above to download the pack.</p></noscript>
-</main>
-<script>
-(function () {
-  var file = document.getElementById("file");
-  var status = document.getElementById("status");
-  var hint = document.getElementById("hint");
+<div class="wrap">
+  <header>
+    <img src="logo.png" alt="CobraMC logo">
+    <h1><span>Cobra</span> Kitmap</h1>
+    <p class="tag">Official texture pack. Every custom armor set gets its own colours.</p>
+    <a class="btn" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip">Download</a>
+    <p class="meta">Minecraft 1.8 &middot; 273 KB &middot; free</p>
+  </header>
 
-  function start() {
-    try { file.click(); } catch (err) { window.location.href = file.href; }
-    // Give the browser a moment to take over the download, then close this tab.
-    setTimeout(function () {
-      window.close();
-      // Still running means the browser refused: a page may only close a tab that was opened for it.
-      setTimeout(function () {
-        status.textContent = "Your download has started.";
-        hint.textContent = "You can close this tab.";
-      }, 500);
-    }, 2500);
-  }
+  <h2>27 armor sets, plus the Diamond Hook and enchant runes</h2>
+  <div class="sets"><img src="sets.png" alt="All 27 textured armor sets" width="1080" height="696"></div>
 
-  if (document.readyState === "complete") { start(); } else { window.addEventListener("load", start); }
-})();
-</script>
+  <h2>How to install</h2>
+  <div class="steps">
+    <div class="step"><b>1</b><h3>Download</h3><p>Press the Download button. You get a file called Cobra Kitmap.zip. Do not unzip it.</p></div>
+    <div class="step"><b>2</b><h3>Open the pack folder</h3><p>In Minecraft go to Options, then Resource Packs, then Open Resource Pack Folder. Drop the zip in.</p></div>
+    <div class="step"><b>3</b><h3>Turn it on</h3><p>Back on the Resource Packs screen, move Cobra Kitmap to the right side and press Done.</p></div>
+  </div>
+  <div class="note"><strong>You need OptiFine.</strong> Lunar Client and Badlion Client already have it built in. Joining the server also offers the pack automatically, and <strong>/pack</strong> in game gives you the download link.</div>
+
+  <footer>CobraMC</footer>
+</div>
 </body>
 </html>
