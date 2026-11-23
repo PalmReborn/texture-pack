@@ -3,83 +3,449 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cobra Kitmap Texture Pack</title>
-<meta name="description" content="Download the Cobra Kitmap texture pack.">
+<title>Cobra Kitmap Texture Pack | CobraMC</title>
+<meta name="description" content="Official CobraMC texture pack for Minecraft 1.8. 27 custom armor sets, an animated Diamond Hook and rune gems.">
+<meta name="theme-color" content="#7dff3c">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CobraMC">
+<meta property="og:title" content="Cobra Kitmap Texture Pack">
+<meta property="og:description" content="27 custom armor sets, an animated Diamond Hook and rune gems. Made for Minecraft 1.8.">
+<meta property="og:url" content="https://pack.cobramc.net/">
+<meta property="og:image" content="https://pack.cobramc.net/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Russo+One&display=swap" rel="stylesheet">
+<script>document.documentElement.className = "js";</script>
 <style>
   :root {
-    --bg: #090c09; --panel: #101610; --line: #1f3a1f;
-    --text: #e8f5e8; --muted: #9db59d; --green: #7dff3c;
+    --bg: #050805; --panel: rgba(14, 22, 14, .78); --panel-solid: #0c140c;
+    --line: rgba(125, 255, 60, .14); --line-strong: rgba(125, 255, 60, .40);
+    --text: #ecf8ec; --muted: #a6bea6; --dim: #6f866f;
+    --neon: #7dff3c; --neon2: #c8ff4a;
+    --radius: 18px;
+    --display: "Russo One", "Segoe UI Black", "Arial Black", Impact, sans-serif;
+    --body: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
   body {
-    margin: 0;
-    background: var(--bg) radial-gradient(ellipse at 50% 0%, #143a1c 0%, var(--bg) 58%) no-repeat;
-    color: var(--text);
-    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.55;
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--body); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
   }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 48px 16px 56px; }
-  header { text-align: center; }
-  header img { width: 170px; height: auto; filter: drop-shadow(0 0 26px rgba(120, 255, 60, .35)); }
-  h1 { font-size: clamp(32px, 6vw, 52px); margin: 14px 0 4px; letter-spacing: .5px; }
-  h1 span { color: var(--green); }
-  .tag { color: var(--muted); font-size: 18px; margin: 0 0 26px; }
+  img { max-width: 100%; display: block; }
+  a { color: var(--neon); }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--neon2); outline-offset: 3px; border-radius: 8px; }
+  .px { image-rendering: pixelated; image-rendering: crisp-edges; }
+  .wrap { width: min(1160px, 100% - 32px); margin-inline: auto; }
+
+  /* ---------- background: glow, drifting light and a faint snake-scale pattern ---------- */
+  .bg {
+    position: fixed; inset: 0; z-index: -1; overflow: hidden;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #13391b 0%, transparent 60%),
+      radial-gradient(900px 600px at 100% 45%, rgba(60, 170, 30, .10) 0%, transparent 60%),
+      radial-gradient(900px 600px at 0% 80%, rgba(60, 170, 30, .08) 0%, transparent 60%),
+      var(--bg);
+  }
+  .bg::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 14px 0, transparent 11px, rgba(125, 255, 60, .075) 12px, transparent 13.5px),
+      radial-gradient(circle at 0 14px, transparent 11px, rgba(125, 255, 60, .075) 12px, transparent 13.5px),
+      radial-gradient(circle at 28px 14px, transparent 11px, rgba(125, 255, 60, .075) 12px, transparent 13.5px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(ellipse 85% 62% at 50% 16%, #000 0%, transparent 78%);
+            mask-image: radial-gradient(ellipse 85% 62% at 50% 16%, #000 0%, transparent 78%);
+  }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); animation: drift 18s ease-in-out infinite alternate; }
+  .blob.a { width: 520px; height: 520px; left: -160px; top: 140px; background: #2bd40f; opacity: .30; }
+  .blob.b { width: 460px; height: 460px; right: -140px; top: 560px; background: #a6ff2e; opacity: .16; animation-duration: 25s; }
+  @keyframes drift { to { transform: translate(70px, -50px) scale(1.12); } }
+
+  /* ---------- top bar ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(5, 8, 5, .66); border-bottom: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  }
+  .nav .wrap { display: flex; align-items: center; gap: 20px; height: 64px; }
+  .brand {
+    display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text);
+    font-family: var(--display); font-size: 20px; letter-spacing: .5px;
+  }
+  .brand img { width: 32px; height: auto; }
+  .brand b { color: var(--neon); font-weight: 400; }
+  .nav nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+  .nav nav a.link {
+    color: var(--muted); text-decoration: none; font-weight: 600; font-size: 14px;
+    padding: 8px 12px; border-radius: 10px; transition: color .2s, background .2s;
+  }
+  .nav nav a.link:hover { color: var(--text); background: rgba(125, 255, 60, .09); }
+
+  /* ---------- buttons ---------- */
   .btn {
-    display: inline-block;
-    background: linear-gradient(180deg, #8dff4f, #3fc41a);
-    color: #061006; font-weight: 800; font-size: 20px; text-decoration: none;
-    padding: 16px 44px; border-radius: 12px;
-    box-shadow: 0 8px 28px rgba(110, 255, 60, .28), inset 0 -3px 0 rgba(0, 0, 0, .18);
+    position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    font-family: var(--display); letter-spacing: .7px; text-transform: uppercase; text-decoration: none;
+    border-radius: 14px; padding: 17px 32px; font-size: 18px; overflow: hidden;
+    transition: transform .15s, box-shadow .2s, filter .2s, background .2s;
   }
-  .btn:hover { filter: brightness(1.08); }
-  .meta { color: var(--muted); font-size: 14px; margin-top: 12px; }
-  h2 { font-size: 22px; margin: 46px 0 14px; text-align: center; }
-  .sets {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-    padding: 14px; overflow-x: auto; text-align: center;
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn.primary {
+    color: #041004;
+    background: linear-gradient(180deg, #b9ff60 0%, #6cf02a 46%, #2fb80f 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .20) inset, 0 -4px 0 rgba(0, 0, 0, .22) inset,
+                0 14px 44px -8px rgba(110, 255, 60, .60);
   }
-  .sets img { max-width: 100%; height: auto; image-rendering: pixelated; }
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-  .step b {
-    display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center;
-    background: var(--green); color: #061006; border-radius: 50%; margin-bottom: 10px;
+  .btn.primary::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .60), transparent);
+    transform: skewX(-18deg); animation: shine 3.6s ease-in-out infinite; pointer-events: none;
   }
-  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  @keyframes shine { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+  .btn.primary:hover { transform: translateY(-3px); filter: brightness(1.07); }
+  .btn.primary:active { transform: translateY(1px); }
+  .btn.ghost { color: var(--text); border: 1px solid var(--line-strong); background: rgba(125, 255, 60, .06); }
+  .btn.ghost:hover { background: rgba(125, 255, 60, .15); transform: translateY(-3px); }
+  .btn.sm { padding: 10px 16px; font-size: 13px; border-radius: 10px; margin-left: 8px; }
+  .btn.sm svg { width: 16px; height: 16px; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; text-align: center; padding: 70px 0 58px; }
+  .hero .logo {
+    width: min(236px, 54vw); margin: 0 auto;
+    filter: drop-shadow(0 0 36px rgba(125, 255, 60, .48));
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float { 50% { transform: translateY(-12px); } }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 9px; margin: 28px 0 0; padding: 6px 15px;
+    border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(125, 255, 60, .07);
+    color: var(--neon2); font-weight: 700; font-size: 12.5px; letter-spacing: 2.4px; text-transform: uppercase;
+  }
+  .eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 12px var(--neon); animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .3; } }
+  h1 {
+    font-family: var(--display); font-weight: 400; text-transform: uppercase;
+    font-size: clamp(46px, 9.6vw, 116px); line-height: .96; letter-spacing: 1px; margin: 16px 0 0;
+  }
+  h1 .g {
+    background: linear-gradient(180deg, #ecffd6 0%, #8dff45 46%, #25a30c 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 8px 30px rgba(110, 255, 60, .38));
+  }
+  h1 .w { color: #f5fff1; text-shadow: 0 8px 30px rgba(0, 0, 0, .65); }
+  .lead { max-width: 640px; margin: 20px auto 0; color: var(--muted); font-size: clamp(16px, 2.2vw, 19px); }
+  .cta { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 30px; }
+  .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 0; margin: 28px 0 0; }
+  .chips li {
+    padding: 7px 14px; border-radius: 999px; background: rgba(255, 255, 255, .045);
+    border: 1px solid rgba(255, 255, 255, .09); color: var(--muted); font-size: 13.5px; font-weight: 600;
+  }
+  .chips b { color: var(--text); font-weight: 700; }
+  .floaters { position: absolute; inset: 0; pointer-events: none; }
+  .floaters img {
+    position: absolute; width: 64px; height: 64px; opacity: .55;
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .65)); animation: bob 7s ease-in-out infinite;
+  }
+  @keyframes bob { 50% { transform: translateY(-20px) rotate(7deg); } }
+
+  /* ---------- shared panels ---------- */
+  .card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+  .card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(160deg, rgba(125, 255, 60, .60), transparent 36%, transparent 64%, rgba(125, 255, 60, .24));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  section { padding: 70px 0 6px; }
+  .head { text-align: center; margin-bottom: 30px; }
+  .kicker { color: var(--neon); font-weight: 700; font-size: 12.5px; letter-spacing: 3px; text-transform: uppercase; }
+  h2 {
+    font-family: var(--display); font-weight: 400; text-transform: uppercase; letter-spacing: .6px;
+    font-size: clamp(28px, 4.6vw, 44px); line-height: 1.1; margin: 8px 0;
+  }
+  .head p { color: var(--muted); margin: 0 auto; max-width: 620px; }
+
+  /* ---------- what is inside ---------- */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature { padding: 26px 24px 24px; text-align: center; transition: transform .22s, box-shadow .22s; }
+  .feature:hover { transform: translateY(-5px); box-shadow: 0 22px 50px -26px rgba(125, 255, 60, .55); }
+  .feature .art { height: 104px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .feature h3 { font-family: var(--display); font-weight: 400; font-size: 20px; margin: 0 0 6px; letter-spacing: .4px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+  .stack { display: flex; }
+  .stack img { width: 64px; height: 64px; margin: 0 -7px; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .6)); transition: transform .25s; }
+  .feature:hover .stack img:nth-child(odd) { transform: translateY(-7px); }
+  .feature:hover .stack img:nth-child(even) { transform: translateY(5px); }
+  .hook {
+    width: 96px; height: 96px; background: url(img/hook.png) 0 0 / 96px auto no-repeat;
+    animation: hook 1.2s steps(12) infinite; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .6));
+  }
+  @keyframes hook { to { background-position: 0 -1152px; } }
+  .runes { display: grid; grid-template-columns: repeat(4, 48px); gap: 2px 6px; }
+  .runes img { width: 48px; height: 48px; transition: transform .2s; }
+  .runes img:hover { transform: scale(1.22) rotate(-6deg); }
+
+  /* ---------- armor sets ---------- */
+  .sets { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+  .set {
+    --c: #7dff3c; --c2: var(--c);
+    flex: 0 0 152px;
+    position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden;
+    padding: 18px 10px 14px; border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012));
+    border: 1px solid rgba(255, 255, 255, .075);
+    transition: transform .22s cubic-bezier(.2, .8, .2, 1), box-shadow .22s, border-color .22s;
+  }
+  .set::before {
+    content: ""; position: absolute; left: 50%; top: 40%; width: 190px; height: 190px;
+    transform: translate(-50%, -50%); pointer-events: none; opacity: .17; transition: opacity .22s;
+    background: radial-gradient(circle, var(--c) 0%, transparent 66%);
+  }
+  .set:hover { transform: translateY(-7px); border-color: var(--c); box-shadow: 0 20px 44px -20px var(--c), 0 0 0 1px var(--c) inset; }
+  .set:hover::before { opacity: .42; }
+  .set .fig { position: relative; width: 96px; height: 192px; transition: transform .22s; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .55)); }
+  .set:hover .fig { transform: scale(1.05); }
+  .set .icons { position: relative; width: 128px; height: 32px; margin-top: 12px; }
+  .set h3 { position: relative; margin: 10px 0 0; font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: .5px; }
+  .set .bar { position: relative; width: 38px; height: 4px; border-radius: 4px; margin-top: 8px; background: linear-gradient(90deg, var(--c), var(--c2)); box-shadow: 0 0 12px var(--c); }
+
+  /* ---------- install ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .step { padding: 26px 24px 24px; }
+  .step .n { font-family: var(--display); font-size: 56px; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px var(--neon); }
+  .step h3 { font-family: var(--display); font-weight: 400; font-size: 19px; margin: 12px 0 6px; }
   .step p { margin: 0; color: var(--muted); font-size: 15px; }
-  .note {
-    margin-top: 18px; background: #0f1a0f; border: 1px solid var(--line);
-    border-left: 4px solid var(--green); border-radius: 10px;
-    padding: 14px 16px; color: var(--muted); font-size: 15px;
+  kbd {
+    font-family: inherit; font-weight: 700; font-size: 13.5px; color: var(--text); white-space: nowrap;
+    background: rgba(125, 255, 60, .10); border: 1px solid var(--line-strong); border-radius: 6px; padding: 1px 7px;
   }
-  .note strong { color: var(--text); }
-  footer { text-align: center; color: #5f755f; font-size: 13px; margin-top: 40px; }
-  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
+  .callout {
+    display: flex; gap: 16px; align-items: flex-start; margin-top: 18px; padding: 20px 22px; border-radius: 16px;
+    background: linear-gradient(90deg, rgba(125, 255, 60, .13), rgba(125, 255, 60, .03)); border: 1px solid var(--line-strong);
+  }
+  .callout .ic {
+    flex: none; width: 40px; height: 40px; border-radius: 11px; background: var(--neon); color: #041004;
+    display: grid; place-items: center;
+  }
+  .callout .ic svg { width: 22px; height: 22px; }
+  .callout p { margin: 0; color: var(--muted); }
+  .callout strong { color: var(--text); }
+  .clients { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin-top: 22px; color: var(--dim); font-size: 14px; font-weight: 600; }
+  .clients span.pill { color: var(--text); padding: 7px 14px 7px 10px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(125, 255, 60, .06); display: inline-flex; align-items: center; gap: 8px; }
+  .clients span.pill::before { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--neon) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.4l2.6 2.6L12 5.6' fill='none' stroke='%23041004' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat; }
+
+  /* ---------- questions ---------- */
+  .faq { max-width: 840px; margin: 0 auto; display: grid; gap: 10px; }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 0 22px; transition: border-color .2s; }
+  details[open] { border-color: var(--line-strong); }
+  summary { list-style: none; cursor: pointer; position: relative; padding: 17px 34px 17px 0; font-weight: 700; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; position: absolute; right: 2px; top: 50%; transform: translateY(-50%); color: var(--neon); font-size: 24px; font-weight: 400; line-height: 1; transition: transform .2s; }
+  details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+  details p { margin: 0 0 18px; color: var(--muted); }
+
+  /* ---------- closing banner and footer ---------- */
+  .final { padding-top: 76px; }
+  .final .box {
+    position: relative; overflow: hidden; text-align: center; padding: 52px 24px; border-radius: 26px;
+    background: radial-gradient(640px 260px at 50% 0%, rgba(125, 255, 60, .24), transparent 70%), var(--panel-solid);
+    border: 1px solid var(--line-strong);
+  }
+  .final h2 { margin-top: 0; }
+  .final p { color: var(--muted); margin: 0 0 26px; }
+  footer { margin-top: 60px; padding: 30px 0 44px; border-top: 1px solid var(--line); color: var(--dim); font-size: 13px; text-align: center; }
+  footer .brand { justify-content: center; margin-bottom: 10px; font-size: 17px; }
+  footer p { margin: 4px 0; }
+
+  /* ---------- reveal on scroll ---------- */
+  .js .reveal { opacity: 0; transform: translateY(24px); transition: opacity .65s ease, transform .65s cubic-bezier(.2, .8, .2, 1); }
+  .js .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 880px) {
+    .features, .steps { grid-template-columns: 1fr; }
+    .nav nav a.link { display: none; }
+    .floaters { display: none; }
+    .hero { padding-top: 46px; }
+    section { padding-top: 54px; }
+  }
+  @media (max-width: 360px) { .set { flex-basis: calc(50% - 7px); padding-inline: 4px; } .set .icons { width: 96px; height: 24px; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+    .js .reveal { opacity: 1; transform: none; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <img src="logo.png" alt="CobraMC logo">
-    <h1><span>Cobra</span> Kitmap</h1>
-    <p class="tag">Official texture pack. Every custom armor set gets its own colours.</p>
-    <a class="btn" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip">Download</a>
-    <p class="meta">Minecraft 1.8 &middot; 273 KB &middot; free</p>
-  </header>
+<div class="bg" aria-hidden="true"><span class="blob a"></span><span class="blob b"></span></div>
 
-  <h2>27 armor sets, plus the Diamond Hook and enchant runes</h2>
-  <div class="sets"><img src="sets.png" alt="All 27 textured armor sets" width="1080" height="696"></div>
-
-  <h2>How to install</h2>
-  <div class="steps">
-    <div class="step"><b>1</b><h3>Download</h3><p>Press the Download button. You get a file called Cobra Kitmap.zip. Do not unzip it.</p></div>
-    <div class="step"><b>2</b><h3>Open the pack folder</h3><p>In Minecraft go to Options, then Resource Packs, then Open Resource Pack Folder. Drop the zip in.</p></div>
-    <div class="step"><b>3</b><h3>Turn it on</h3><p>Back on the Resource Packs screen, move Cobra Kitmap to the right side and press Done.</p></div>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="logo.png" alt=""><span>Cobra<b>MC</b></span></a>
+    <nav>
+      <a class="link" href="#sets">Sets</a>
+      <a class="link" href="#install">Install</a>
+      <a class="link" href="#faq">Questions</a>
+      <a class="btn primary sm" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6.5 10.5 12 16l5.5-5.5"/><path d="M4 20h16"/></svg>Download</a>
+    </nav>
   </div>
-  <div class="note"><strong>You need OptiFine.</strong> Lunar Client and Badlion Client already have it built in. Joining the server also offers the pack automatically, and <strong>/pack</strong> in game gives you the download link.</div>
+</header>
 
-  <footer>CobraMC</footer>
-</div>
+<main id="top">
+  <div class="hero">
+    <div class="floaters" aria-hidden="true"><img class="px" src="img/chest/akuma.png" alt="" style="left:6%;top:10%;animation-delay:-0.0s;width:80px;height:80px"><img class="px" src="img/chest/oku.png" alt="" style="left:19%;top:26%;animation-delay:-1.4s;width:48px;height:48px"><img class="px" src="img/chest/warden.png" alt="" style="left:4%;top:52%;animation-delay:-2.6s;width:64px;height:64px"><img class="px" src="img/chest/wraith.png" alt="" style="left:11%;top:84%;animation-delay:-3.4s;width:48px;height:48px"><img class="px" src="img/chest/traveler.png" alt="" style="left:88%;top:8%;animation-delay:-0.8s;width:64px;height:64px"><img class="px" src="img/chest/inferno.png" alt="" style="left:77%;top:24%;animation-delay:-2.0s;width:48px;height:48px"><img class="px" src="img/chest/colossal.png" alt="" style="left:91%;top:50%;animation-delay:-3.0s;width:80px;height:80px"><img class="px" src="img/chest/blizzard.png" alt="" style="left:84%;top:86%;animation-delay:-1.1s;width:48px;height:48px"></div>
+    <div class="wrap">
+      <img class="logo" src="logo.png" alt="CobraMC logo" width="280" height="320">
+      <div><span class="eyebrow"><i></i>Official texture pack</span></div>
+      <h1><span class="g">Cobra</span> <span class="w">Kitmap</span></h1>
+      <p class="lead">Every custom armor set in its own colors, an animated Diamond Hook and a gem for every rune. One small download.</p>
+      <div class="cta">
+        <a class="btn primary" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6.5 10.5 12 16l5.5-5.5"/><path d="M4 20h16"/></svg>Download</a>
+        <a class="btn ghost" href="#install">How to install</a>
+      </div>
+      <ul class="chips">
+        <li><b>Minecraft 1.8</b></li>
+        <li><b>27</b> armor sets</li>
+        <li><b>273 KB</b> download</li>
+        <li><b>Free</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="features">
+      <div class="card feature reveal">
+        <div class="art"><div class="stack"><img class="px" src="img/chest/akuma.png" alt="" width="64" height="64"><img class="px" src="img/chest/oku.png" alt="" width="64" height="64"><img class="px" src="img/chest/warden.png" alt="" width="64" height="64"><img class="px" src="img/chest/wraith.png" alt="" width="64" height="64"><img class="px" src="img/chest/colossal.png" alt="" width="64" height="64"></div></div>
+        <h3>27 armor sets</h3>
+        <p>Each set has its own look when worn and its own icons in your inventory.</p>
+      </div>
+      <div class="card feature reveal">
+        <div class="art"><div class="hook px" role="img" aria-label="Animated Diamond Hook"></div></div>
+        <h3>Animated Diamond Hook</h3>
+        <p>The hook cycles through every color while you hold it.</p>
+      </div>
+      <div class="card feature reveal">
+        <div class="art"><div class="runes"><img class="px" src="img/runes/common.png" alt="Common rune" title="Common" width="48" height="48"><img class="px" src="img/runes/rare.png" alt="Rare rune" title="Rare" width="48" height="48"><img class="px" src="img/runes/mythic.png" alt="Mythic rune" title="Mythic" width="48" height="48"><img class="px" src="img/runes/legendary.png" alt="Legendary rune" title="Legendary" width="48" height="48"><img class="px" src="img/runes/soul.png" alt="Soul rune" title="Soul" width="48" height="48"><img class="px" src="img/runes/heroic.png" alt="Heroic rune" title="Heroic" width="48" height="48"><img class="px" src="img/runes/fury.png" alt="Fury rune" title="Fury" width="48" height="48"><img class="px" src="img/runes/plague.png" alt="Plague rune" title="Plague" width="48" height="48"></div></div>
+        <h3>Rune gems</h3>
+        <p>Enchant runes show a gem in the color of their rarity.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="sets">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">The collection</div>
+        <h2>All 27 armor sets</h2>
+        <p>Front view when worn, with the helmet, chestplate, leggings and boots as they look in your inventory.</p>
+      </div>
+      <div class="sets">
+        <article class="set reveal" style="--c:#ff5455;--c2:#d12829"><img class="fig px" src="img/sets/akuma.png" alt="Akuma armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/akuma-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Akuma</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d1d1d1;--c2:#d1d1d1"><img class="fig px" src="img/sets/blizzard.png" alt="Blizzard armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/blizzard-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Blizzard</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d1aa15;--c2:#8a15d1"><img class="fig px" src="img/sets/chronic.png" alt="Chronic armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/chronic-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Chronic</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#41d140;--c2:#3ad13a"><img class="fig px" src="img/sets/colossal.png" alt="Colossal armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/colossal-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Colossal</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d166c5;--c2:#d16cd1"><img class="fig px" src="img/sets/cupid.png" alt="Cupid armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/cupid-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Cupid</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d11515;--c2:#d11515"><img class="fig px" src="img/sets/diablo.png" alt="Diablo armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/diablo-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Diablo</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#15d1d1;--c2:#15d1d1"><img class="fig px" src="img/sets/easter.png" alt="Easter armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/easter-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Easter</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#eae42c;--c2:#cbd129"><img class="fig px" src="img/sets/elemental.png" alt="Elemental armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/elemental-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Elemental</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d1ae5f;--c2:#d1ae5f"><img class="fig px" src="img/sets/expedition.png" alt="Expedition armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/expedition-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Expedition</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#fffd56;--c2:#d1cf3b"><img class="fig px" src="img/sets/fortune.png" alt="Fortune armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/fortune-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Fortune</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#9854e4;--c2:#d146d1"><img class="fig px" src="img/sets/gambit.png" alt="Gambit armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/gambit-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Gambit</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#ffb219;--c2:#d19215"><img class="fig px" src="img/sets/inferno.png" alt="Inferno armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/inferno-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Inferno</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#55d450;--c2:#50d150"><img class="fig px" src="img/sets/jolly.png" alt="Jolly armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/jolly-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Jolly</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d1ad30;--c2:#d1ac2a"><img class="fig px" src="img/sets/koth.png" alt="K.O.T.H armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/koth-icons.png" alt="" width="128" height="32" loading="lazy"><h3>K.O.T.H</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#15d1d1;--c2:#15d1d1"><img class="fig px" src="img/sets/leviathan.png" alt="Leviathan armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/leviathan-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Leviathan</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#c8b4d1;--c2:#c8b4d1"><img class="fig px" src="img/sets/lover.png" alt="Lover armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/lover-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Lover</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#16d115;--c2:#17d115"><img class="fig px" src="img/sets/lucky.png" alt="Lucky armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/lucky-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Lucky</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d11515;--c2:#d11515"><img class="fig px" src="img/sets/magma.png" alt="Magma armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/magma-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Magma</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#f5ebeb;--c2:#d1d1d1"><img class="fig px" src="img/sets/mimic.png" alt="Mimic armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/mimic-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Mimic</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#19f5ff;--c2:#19d8ff"><img class="fig px" src="img/sets/newyears.png" alt="New Year armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/newyears-icons.png" alt="" width="128" height="32" loading="lazy"><h3>New Year</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#157bd1;--c2:#157bd1"><img class="fig px" src="img/sets/oku.png" alt="Oku armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/oku-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Oku</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#f1e4e4;--c2:#d1d1d1"><img class="fig px" src="img/sets/rover.png" alt="Rover armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/rover-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Rover</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#1595d1;--c2:#7b15d1"><img class="fig px" src="img/sets/shuffler.png" alt="Shuffler armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/shuffler-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Shuffler</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#6315d1;--c2:#6315d1"><img class="fig px" src="img/sets/traveler.png" alt="Traveler armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/traveler-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Traveler</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#fff519;--c2:#d1ca15"><img class="fig px" src="img/sets/warden.png" alt="Warden armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/warden-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Warden</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#d1c6c6;--c2:#d1c6c6"><img class="fig px" src="img/sets/werewolf.png" alt="Werewolf armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/werewolf-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Werewolf</h3><span class="bar"></span></article>
+        <article class="set reveal" style="--c:#ff55ff;--c2:#d12cd1"><img class="fig px" src="img/sets/wraith.png" alt="Wraith armor set" width="96" height="192" loading="lazy"><img class="icons px" src="img/sets/wraith-icons.png" alt="" width="128" height="32" loading="lazy"><h3>Wraith</h3><span class="bar"></span></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">Three steps</div>
+        <h2>How to install</h2>
+        <p>Takes about a minute. You only do it once.</p>
+      </div>
+      <div class="steps">
+        <div class="card step reveal"><div class="n">01</div><h3>Download</h3><p>Press <kbd>Download</kbd>. You get a file called Cobra Kitmap.zip. Leave it zipped.</p></div>
+        <div class="card step reveal"><div class="n">02</div><h3>Open the pack folder</h3><p>In Minecraft go to <kbd>Options</kbd> <kbd>Resource Packs</kbd> <kbd>Open Resource Pack Folder</kbd> and drop the zip in.</p></div>
+        <div class="card step reveal"><div class="n">03</div><h3>Turn it on</h3><p>Back on the Resource Packs screen, move Cobra Kitmap to the right side and press <kbd>Done</kbd>.</p></div>
+      </div>
+      <div class="callout reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+        <p><strong>Even easier: just join.</strong> The server offers the pack when you connect. Say Yes and you are done. In game, <kbd>/pack</kbd> sends you the download link again.</p>
+      </div>
+      <div class="clients reveal">Works with <span class="pill">OptiFine</span><span class="pill">Lunar Client</span><span class="pill">Badlion Client</span></div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="head reveal">
+        <div class="kicker">Good to know</div>
+        <h2>Questions</h2>
+      </div>
+      <div class="faq">
+        <details class="reveal"><summary>I installed it but my armor still looks normal</summary><p>The custom looks need OptiFine. Lunar Client and Badlion Client have it built in. On plain Minecraft the pack still loads, but the armor looks the same as before.</p></details>
+        <details class="reveal"><summary>Do I have to install it by hand?</summary><p>No. When you join, Minecraft asks if you want the server's pack. Say Yes. If you said No before, select the server in your list, press Edit, and set Server Resource Packs to Enabled.</p></details>
+        <details class="reveal"><summary>Does it change my other textures?</summary><p>No. It only changes the custom armor sets, the Diamond Hook and enchant runes. Blocks, normal items and your own PvP pack stay exactly as they are.</p></details>
+        <details class="reveal"><summary>Can other players see my set?</summary><p>Yes. Everyone who has the pack sees the colors of your set, and you see theirs.</p></details>
+        <details class="reveal"><summary>Which Minecraft version is it for?</summary><p>Minecraft 1.8, the version the server runs on.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div class="wrap">
+      <div class="box reveal">
+        <h2>Ready to suit up?</h2>
+        <p>27 armor sets, one small file.</p>
+        <a class="btn primary" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M6.5 10.5 12 16l5.5-5.5"/><path d="M4 20h16"/></svg>Download Cobra Kitmap</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="brand"><img src="logo.png" alt=""><span>Cobra<b>MC</b></span></div>
+    <p>&copy; 2026 CobraMC</p>
+    <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var items = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) {
+    for (var i = 0; i < items.length; i++) { items[i].classList.add("in"); }
+    return;
+  }
+  var seen = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) { entry.target.classList.add("in"); seen.unobserve(entry.target); }
+    });
+  }, { threshold: 0.1 });
+  for (var j = 0; j < items.length; j++) { seen.observe(items[j]); }
+})();
+</script>
 </body>
 </html>
