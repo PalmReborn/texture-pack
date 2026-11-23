@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cobra Kitmap Texture Pack</title>
+<meta name="description" content="Download the Cobra Kitmap texture pack.">
+<link rel="icon" type="image/png" href="logo.png">
+<style>
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #0a0d0a radial-gradient(ellipse at 50% 35%, #12301a 0%, #0a0d0a 62%);
+    color: #e8f5e8;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+  main { padding: 24px; max-width: 460px; }
+  img { width: 150px; height: auto; filter: drop-shadow(0 0 22px rgba(120, 255, 60, .35)); }
+  h1 { margin: 18px 0 6px; font-size: 30px; letter-spacing: .5px; }
+  h1 span { color: #7dff3c; }
+  p { margin: 8px 0; color: #a9c2a9; font-size: 16px; line-height: 1.5; }
+  a { color: #7dff3c; }
+  .big { color: #e8f5e8; font-size: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <img src="logo.png" alt="CobraMC logo">
+  <h1><span>Cobra</span> Kitmap</h1>
+  <p class="big" id="status">Starting your download...</p>
+  <p id="hint">This tab closes by itself in a moment.</p>
+  <p><a id="file" href="Cobra%20Kitmap.zip" download="Cobra Kitmap.zip">Download did not start? Click here.</a></p>
+  <noscript><p>Scripts are turned off. Use the link above to download the pack.</p></noscript>
+</main>
+<script>
+(function () {
+  var file = document.getElementById("file");
+  var status = document.getElementById("status");
+  var hint = document.getElementById("hint");
+
+  function start() {
+    try { file.click(); } catch (err) { window.location.href = file.href; }
+    // Give the browser a moment to take over the download, then close this tab.
+    setTimeout(function () {
+      window.close();
+      // Still running means the browser refused: a page may only close a tab that was opened for it.
+      setTimeout(function () {
+        status.textContent = "Your download has started.";
+        hint.textContent = "You can close this tab.";
+      }, 500);
+    }, 2500);
+  }
+
+  if (document.readyState === "complete") { start(); } else { window.addEventListener("load", start); }
+})();
+</script>
+</body>
+</html>
