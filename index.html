@@ -45,9 +45,8 @@
   .px { image-rendering: pixelated; image-rendering: crisp-edges; }
   .wrap { width: min(1160px, 100% - 32px); margin-inline: auto; }
 
-  /* ---------- floating pill menu: slides away on the way down, returns on the way up ---------- */
-  .nav { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 30; width: min(1100px, 100% - 24px); transition: transform .35s ease, opacity .35s ease; }
-  .nav.away { transform: translate(-50%, -170%); opacity: 0; pointer-events: none; }
+  /* ---------- floating pill menu: stays at the top of the window while the page scrolls ---------- */
+  .nav { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 30; width: min(1100px, 100% - 24px); }
   .nav .bar {
     display: flex; align-items: center; gap: 14px; padding: 8px 10px 8px 14px; border-radius: 999px;
     background: rgba(4, 30, 40, .74); border: 1px solid var(--line-strong);
@@ -306,7 +305,7 @@
 </style>
 </head>
 <body>
-<header class="nav" id="menu">
+<header class="nav">
   <div class="bar">
     <a class="brand" href="#top"><img src="logo.webp" alt=""><span>Palm</span></a>
     <nav>
@@ -497,16 +496,6 @@
   } else {
     for (var j = 0; j < items.length; j++) { items[j].classList.add("in"); }
   }
-
-  /* ---------- menu: away while scrolling down, back when scrolling up ---------- */
-  var menu = document.getElementById("menu");
-  var lastY = window.pageYOffset;
-  window.addEventListener("scroll", function () {
-    var y = window.pageYOffset;
-    if (y > lastY + 4 && y > 260) { menu.classList.add("away"); }
-    else if (y < lastY - 4 || y <= 260) { menu.classList.remove("away"); }
-    lastY = y;
-  }, { passive: true });
 
   /* ---------- 3D player that can be turned by dragging ---------- */
   function makePlayer(canvas, onUse, onHook) {
